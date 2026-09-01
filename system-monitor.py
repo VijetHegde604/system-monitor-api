@@ -13,6 +13,24 @@ BOOT_TIME = psutil.boot_time()
 metrics = {}
 
 
+def format_duration(total_seconds):
+    """Return a concise, human-readable representation of a duration."""
+    total_seconds = max(0, int(total_seconds))
+    days, remainder = divmod(total_seconds, 86_400)
+    hours, remainder = divmod(remainder, 3_600)
+    minutes, seconds = divmod(remainder, 60)
+
+    parts = []
+    if days:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours or parts:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes or parts:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+    return ", ".join(parts)
+
+
 # ---------------------------
 # Detect active interface
 # ---------------------------
@@ -86,6 +104,8 @@ def sampler():
             "temperature_c": get_temperature(),
             "load_avg": round(psutil.getloadavg()[0], 2),
             "uptime_seconds": uptime,
+            "uptime": format_duration(uptime),
+            "os_age": format_duration(uptime),
             "download_speed_mbps": round(download, 2),
             "upload_speed_mbps": round(upload, 2),
             "timestamp": int(time.time()),

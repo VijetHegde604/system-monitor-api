@@ -7,7 +7,7 @@ A lightweight Python HTTP service that exposes basic host system metrics as JSON
 - JSON API for current system status
 - CPU usage and core count
 - Memory and disk usage in percentages and GiB
-- Hostname, uptime, load average, and Unix timestamp
+- Hostname, human-readable uptime and OS session age, load average, and Unix timestamp
 - Optional temperature reporting when supported by the host
 - Per-second upload and download throughput for the first active non-loopback network interface
 
@@ -67,6 +67,8 @@ curl http://localhost:8000/info
   "temperature_c": 48.5,
   "load_avg": 0.76,
   "uptime_seconds": 123456,
+  "uptime": "1 day, 10 hours, 17 minutes, 36 seconds",
+  "os_age": "1 day, 10 hours, 17 minutes, 36 seconds",
   "download_speed_mbps": 1.23,
   "upload_speed_mbps": 0.45,
   "timestamp": 1797715200
@@ -93,6 +95,8 @@ Returns the latest sampled host metrics.
 | `temperature_c` | number or null | First available sensor temperature in Celsius, or `null` when unavailable. |
 | `load_avg` | number | One-minute system load average. |
 | `uptime_seconds` | integer | Seconds since the system booted. |
+| `uptime` | string | Human-readable time since the system booted. |
+| `os_age` | string | Human-readable age of the current OS session (time since the most recent boot). |
 | `download_speed_mbps` | number | Approximate inbound network throughput in megabits per second. |
 | `upload_speed_mbps` | number | Approximate outbound network throughput in megabits per second. |
 | `timestamp` | integer | Unix timestamp for the sample. |
