@@ -7,7 +7,7 @@ A lightweight Python HTTP service that exposes basic host system metrics as JSON
 - JSON API for current system status
 - CPU usage and core count
 - Memory and disk usage in percentages and GiB
-- Hostname, human-readable uptime and OS session age, load average, and Unix timestamp
+- Hostname, formatted uptime and OS age in days, load average, and Unix timestamp
 - Optional temperature reporting when supported by the host
 - Per-second upload and download throughput for the first active non-loopback network interface
 
@@ -68,7 +68,7 @@ curl http://localhost:8000/info
   "load_avg": 0.76,
   "uptime_seconds": 123456,
   "uptime": "1 day, 10 hours, 17 minutes, 36 seconds",
-  "os_age": "1 day, 10 hours, 17 minutes, 36 seconds",
+  "os_age": "142 days",
   "download_speed_mbps": 1.23,
   "upload_speed_mbps": 0.45,
   "timestamp": 1797715200
@@ -96,7 +96,7 @@ Returns the latest sampled host metrics.
 | `load_avg` | number | One-minute system load average. |
 | `uptime_seconds` | integer | Seconds since the system booted. |
 | `uptime` | string | Human-readable time since the system booted. |
-| `os_age` | string | Human-readable age of the current OS session (time since the most recent boot). |
+| `os_age` | string or null | Whole days since the root filesystem was created. `null` when the filesystem does not expose a creation time. |
 | `download_speed_mbps` | number | Approximate inbound network throughput in megabits per second. |
 | `upload_speed_mbps` | number | Approximate outbound network throughput in megabits per second. |
 | `timestamp` | integer | Unix timestamp for the sample. |
@@ -128,4 +128,5 @@ curl http://localhost:8000/info
 ## Notes
 
 - The first network speed sample may be `0` or near `0` because speeds are calculated from the difference between consecutive one-second samples.
+- OS age is derived from `stat -c %W /` (the root filesystem creation timestamp), rather than the most recent boot. Filesystems without a creation timestamp return `null` for `os_age`.
 - The API is intentionally minimal and does not provide authentication. Avoid exposing it directly to untrusted networks without adding access controls or placing it behind a trusted reverse proxy.
