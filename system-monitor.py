@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import socket
+import subprocess
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -29,6 +30,38 @@ def format_duration(total_seconds):
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
     parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
     return ", ".join(parts)
+
+
+def get_root_filesystem_birth_time():
+    """Return the root filesystem creation timestamp, when GNU stat provides it."""
+    try:
+        result = subprocess.run(
+            ["stat", "-c", "%W", "/"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError:
+        return None
+    try:
+        birth_time = int(result.stdout.strip())
+    except ValueError:
+        return None
+
+    # GNU stat reports -1 when the filesystem does not expose a birth time.
+    return birth_time if birth_time > 0 else None
+
+
+ROOT_FILESYSTEM_BIRTH_TIME = get_root_filesystem_birth_time()
+
+
+def get_os_age():
+    """Return the OS age in whole days based on the root filesystem birth time."""
+    if ROOT_FILESYSTEM_BIRTH_TIME is None:
+        return None
+
+    elapsed_seconds = max(0, int(time.time()) - ROOT_FILESYSTEM_BIRTH_TIME)
+    return f"{elapsed_seconds // 86_400} days"
 
 
 # ---------------------------
@@ -105,7 +138,7 @@ def sampler():
             "load_avg": round(psutil.getloadavg()[0], 2),
             "uptime_seconds": uptime,
             "uptime": format_duration(uptime),
-            "os_age": format_duration(uptime),
+            "os_age": get_os_age(),
             "download_speed_mbps": round(download, 2),
             "upload_speed_mbps": round(upload, 2),
             "timestamp": int(time.time()),
